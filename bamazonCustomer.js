@@ -21,42 +21,112 @@ connection.connect(function(err) {
 });
 
 function displayProducts() {
-    connection.query("SELECT item_id, product_name, price FROM products", function(err, results) {
+    connection.query("SELECT item_id, product_name, department_name, stock_quantity, price FROM products", function(err, results) {
         if(err) throw err;
 
         console.log("\n          --------------------------\n          Available Bamazon Products\n          --------------------------\n");
 
-        var table = new Table ({
-            head: ["Product ID", "Product", "Department", "Price", "Stock Quantity"],
-            colWidths: [10, 80, 30, 10, 10]
-        });
+        // for (var i = 1; i < results.length; i++) {
+        //     console.log(
+        //         "Product ID: " +
+        //         results[i].item_id +
+        //         " || Product: " +
+        //         results[i].product_name +
+        //         " || Department: " +
+        //         results[i].department_name +
+        //         " || Price: " +
+        //         results[i].price +
+        //         " || Stock Quantity: " +
+        //         results[i].stock_quantity
+        //     );
+        // }
 
-        console.log(table);
+
+        var table = new Table ({
+            head: ["Product ID", "Product", "Department", "Price", "Stock \nQuantity"],
+            colWidths: [13, 35, 30, 10, 10]
+        });
 
         for (var i = 0; i < results.length; i++) {
             var infoArray = [results[i].item_id, results[i].product_name,  results[i].department_name, results[i].price, results[i].stock_quantity]; 
 
             table.push(infoArray);
         };        
-        console.log("________________table");
-        console.log(table);
 
-        console.log("to string--------------------");
         console.log(table.toString());
-        connection.end();
+
+        shoppingCart(results);
+
     });
 };
 
-function shoppingCart() {
-    inquirer
-        .prompt({
-            name: "product_id",
-            type: "input",
-            message: "Select products to order by entering Product ID. [Press Q to quit]"
-        })
-        .then(function(answer) {
-            var query = "SELECT"
-        })
+function shoppingCart(results) {
+    inquirer.prompt({
+        name: "choiceId",
+        type: "input",
+        message: "Select a product to order by entering the Item ID. [Press Q to quit]",
+    }).then(function(answer) {
+
+        // Allows the user to exit out any time
+        if(answer.choiceId.toLowerCase() == "q") {
+            process.exit();
+        }
+
+        // Check to make sure choice is valid
+        // Then prompts user for quantity
+        for (var i = 0; i < results.length; i++) {
+            //loop through all of the product ids 
+            //if answer == product id in the loop
+                //then ask them how many they would like to buy
+            //else tell them that's an invalid selection, and ask for a valid product id
+            if(results[i].item_id == answer.choiceId) {
+                var choice = answer.choiceId;
+                var id = i;
+
+                console.log("You selected " + results[i].product_name);
+
+                inquirer.prompt([{
+                    name: "quantity",
+                    type: "input",
+                    message: "How many would you like to buy?",
+                    validate: function(value) {
+                        if(isNaN(value)==false) {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    }
+                }]).then(function(answer) {
+                    var num = answer.quantity;
+                    var diff = (results[id].stock_quantity - num);
+
+                    // Total cost, make sure only 2 decimal places
+                    var totalCost = parseFloat(results[id].price * num).toFixed(2);
+
+                    if(diff >= 0) {
+                        connection.query("UPDATE products SET stock_quantity = '" + diff + "' WHERE item_id='" + choice + "'", function(err, resultsTwo) {
+                            if(err) throw err;
+
+                            setInterval(displayProducts, 1000);
+                            console.log("\nThe total of your purchase is: $" + totalCost);
+
+                        })
+                    } else {
+                        console.log("Insufficiant quantity. Please try again.");
+                        shoppingCart(results);
+                    }
+                })
+            }  //else {
+            //     console.log("Choice is: " + choice);
+            //     console.log("That is not a vaild Product Id.\nPlease try again.");
+            //     shoppingCart(results);
+            // }
+        }        
+        
+        connection.end();
+
+    })
+
 }
 
 // Show the user a list of the products
