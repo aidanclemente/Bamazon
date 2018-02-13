@@ -100,10 +100,17 @@ function shoppingCart(results) {
                         connection.query("UPDATE products SET stock_quantity = '" + diff + "' WHERE item_id='" + choice + "'", function(err, resultsTwo) {
                             if(err) throw err;
 
-                            displayProducts();
+                            makeTable(results);
 
-                            console.log("\nYou have successfully purchased " + num + " of " + product);
-                            console.log("\nThe total of your purchase is: $" + formatNumber(totalCost));
+                            function message(){
+                                console.log("\nYou have successfully purchased " + num + " of " + product);
+                                console.log("The total of your purchase is: $" + formatNumber(totalCost) + "\n");
+                            };
+
+                            // To show message after the table
+                            setTimeout(message, 250);
+                            setTimeout(orderMore, 300);
+                            
                         })
                     } else {
                         console.log("\nInsufficiant quantity of " + product + ". Please try again.\n");
@@ -131,3 +138,32 @@ function shoppingCart(results) {
             //update the quantity available
             //create a variable to store the total
 // module.exports = displayProducts;
+
+function makeTable(results) {
+    var table = new Table ({
+        head: ["Product ID", "Product", "Department", "Price", "Stock \nQuantity"],
+        colWidths: [13, 35, 30, 10, 10]
+    });
+
+    for (var i = 0; i < results.length; i++) {
+        var infoArray = [results[i].item_id, results[i].product_name,  results[i].department_name, results[i].price, results[i].stock_quantity]; 
+        table.push(infoArray);
+    };        
+
+    console.log(table.toString());
+};
+
+function orderMore() {
+    inquirer.prompt({
+        name: "continue",
+        type: "confirm",
+        message: "Would you like to order another product?"
+    }).then(function(answer) {
+        if (answer.continue == true) {
+            displayProducts();
+        } else {
+            console.log("Thank you for shopping with Bamazon.\nHave a great day!");
+            process.exit();
+        }
+    })
+}

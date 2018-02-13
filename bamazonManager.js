@@ -73,6 +73,21 @@ function makeTable(results) {
     console.log(table.toString());
 };
 
+function keepGoing() {
+    inquirer.prompt({
+        name: "continue",
+        type: "confirm",
+        message: "Return to main menue?"
+    }).then(function(answer) {
+        if (answer.continue == true) {
+            promptAction();
+        } else {
+            console.log("Now exiting Bamazon Manager.\nHave a great day!");
+            process.exit();
+        }
+    })
+}
+
 function displayProducts() {
     connection.query("SELECT * FROM products", function(err, results) {
         if(err) throw err;
@@ -82,7 +97,7 @@ function displayProducts() {
         console.log("\n          --------------------------\n");
 
         makeTable(results);
-        promptAction();
+        keepGoing();
     });
 };
 
@@ -95,10 +110,12 @@ function viewLowInv() {
         console.log("\n          --------------------------\n");
 
         makeTable(resultsTable);
-        promptAction();
+        keepGoing();
     });
 };
 
+
+// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 function addInv() {
     connection.query("SELECT * FROM products", function(err, resultsAdd) {
         if(err) throw err;
@@ -129,14 +146,24 @@ function addInv() {
                             }
                         }
                     }]).then(function(answer) {
+
                         var num = answer.addQuant;
-                        var addNum = (resultsAdd[id].stock_quantity + num);
+                        var updateQuantity = (parseInt(resultsAdd[id].stock_quantity) + parseInt(num));
 
-                        var query = "UPDATE products SET stock_quantity= ? WHERE item_id=?"
+                        var query = "SELECT * FROM products WHERE ?;"
 
-                        connection.query(query, [num, choice], function(err, resultsQuant) {
-                            console.log(resultsAdd[id].product_name);
-                            console.log("You have successfully added " + num + " " + resultsAdd[id].product_name);
+                        connection.query(query, {item_id: choice}, function(err, resultsQuant) {
+                            if(err) throw err;
+
+                            var queryTwo = "UPDATE products SET ? WHERE ?";
+
+                            connection.query(queryTwo, [{stock_quantity: updateQuantity},{item_id: choice}], function(err, resultsInvtAdd) {
+                                if (err) throw err;
+                                    
+                                console.log("\nYou have successfully added " + num + " " + resultsAdd[id].product_name + "\n");
+
+                                keepGoing();
+                            })                            
                         })
                     })
                 }
@@ -154,6 +181,6 @@ function addInv() {
 
 
 function quit() {
-    console.log("Goodbye.");
+    console.log("Now exiting Bamazon Manager. Goodbye.");
     process.exit();
 };
