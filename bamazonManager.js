@@ -1,9 +1,7 @@
 var mysql = require("mysql");
 var inquirer = require("inquirer");
 var Table = require('cli-table');
-//var displayProducts = require("./bamazonCustomer.js")
 
-//******** Need to make a function for making the table and pass results through it */
 var connection = mysql.createConnection({
     host: "localhost",
     port: 3306,
@@ -20,6 +18,7 @@ connection.connect(function(err) {
     console.log("Connected as id: " + connection.threadId);
     promptAction();
 });
+
 
 function promptAction() {
     inquirer.prompt({
@@ -48,7 +47,7 @@ function promptAction() {
                 break;
 
             case "Add a New Product":
-                //call function here
+                addProduct();
                 break;
 
             case "Quit":
@@ -56,8 +55,8 @@ function promptAction() {
                 break;
         }
     });
-    // connection.end();
-}
+};
+
 
 function makeTable(results) {
     var table = new Table ({
@@ -73,6 +72,7 @@ function makeTable(results) {
     console.log(table.toString());
 };
 
+
 function keepGoing() {
     inquirer.prompt({
         name: "continue",
@@ -82,11 +82,26 @@ function keepGoing() {
         if (answer.continue == true) {
             promptAction();
         } else {
-            console.log("Now exiting Bamazon Manager.\nHave a great day!");
+            console.log("\nNow exiting Bamazon Manager.\nHave a great day!");
             process.exit();
         }
     })
-}
+};
+
+// This doesn't seem to work
+// function toValidate(value) {
+//     if(isNaN(value) === false) {
+//         return true;
+//     } else {
+//         return false;
+//     }
+// };
+
+function notValid() {
+    console.log("Not a valid number. Please Try again.");
+    process.exit();
+};
+
 
 function displayProducts() {
     connection.query("SELECT * FROM products", function(err, results) {
@@ -100,6 +115,7 @@ function displayProducts() {
         keepGoing();
     });
 };
+
 
 function viewLowInv() {
     connection.query("SELECT * FROM products WHERE stock_quantity < 6", function(err, resultsTable) {
@@ -115,18 +131,34 @@ function viewLowInv() {
 };
 
 
-// +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 function addInv() {
     connection.query("SELECT * FROM products", function(err, resultsAdd) {
         if(err) throw err;
 
         makeTable(resultsAdd);
 
+// How do I make it so there is a message or something if they enter an ID number that doesn't exsist?
+
         inquirer.prompt([
             {
                 name: "addID",
                 type: "input",
                 message: "What is the ID of the item you would like to add to?",
+                validate: function(value) {
+                    if(isNaN(value) === false) {
+                        return true;
+                    } else {
+                        console.log("\nNot a valid ID. Please try again.");
+                        process.exit();
+                        
+                        // This leaves the user to exit the process with Ctrl C
+                        //return false;
+
+                        // This does some funny stuff...
+                        // console.log("\nNot a valid ID. Please try again.");
+                        // keepGoing();
+                    }
+                }
             }
         ]).then(function(answer) {
             for (var i = 0; i < resultsAdd.length; i++) {
@@ -139,10 +171,14 @@ function addInv() {
                         type: "input",
                         message: "How many would you like to add?",
                         validate: function(value) {
-                            if(isNaN(value)==false) {
+                            if(isNaN(value) === false) {
                                 return true;
                             } else {
-                                return false;
+                                notValid();
+
+                                // return false;
+                                // console.log("Not a valid number. Please Try again.");
+                                // keepGoing();
                             }
                         }
                     }]).then(function(answer) {
@@ -170,17 +206,69 @@ function addInv() {
             }
         })
     });
-    // print the table
-    //need to prompt the user for which item they would like to add inventory to
-    //how much would they like to add
-    //if successful send message Successful! You have added X to Y
 };
 
 
+function addProduct() {
+    inquirer.prompt([
+        {
+            name: "product",
+            type: "input",
+            message: "What's the name of the product that you would like to add?"
+        },
+        {
+            name: "department",
+            type: "input",
+            message: "What department will this product be listed under?"
+        },
+        {
+            name: "price",
+            type: "input",
+            message: "What is the cost per unit for this product?",
+            validate: function(value) {
+                if(isNaN(value) === false) {
+                    return true;
+                } else {
+                    notValid();
+                    //return false;
+                }
+            }
+        },
+        {
+            name: "quantity",
+            type: "input",
+            message: "How many units will you be adding to inventory?",
+            validate: function(value) {
+                if(isNaN(value) === false) {
+                    return true;
+                } else {
+                    notValid();
+                    //return false;
+                }
+            }
+        }
+    ]).then(function(answer) {
+        var query = "INSERT INTO products SET ?";
 
+        connection.query(query,
+            {
+                product_name: answer.product,
+                department_name: answer.department,
+                price: answer.price,
+                stock_quantity: answer.quantity
+            },
+            function(err) {
+                if (err) throw err;
+
+                console.log(answer.quantity + " of " + answer.product + " were successfully added.")
+                keepGoing();
+            }
+        );
+    });
+}
 
 
 function quit() {
-    console.log("Now exiting Bamazon Manager. Goodbye.");
+    console.log("\nNow exiting Bamazon Manager. Goodbye.");
     process.exit();
 };
