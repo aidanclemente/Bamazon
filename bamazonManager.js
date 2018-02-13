@@ -44,7 +44,7 @@ function promptAction() {
                 break;
 
             case "Add to Inventory":
-                //call function here
+                addInv();
                 break;
 
             case "Add a New Product":
@@ -58,6 +58,20 @@ function promptAction() {
     });
     // connection.end();
 }
+
+function makeTable(results) {
+    var table = new Table ({
+        head: ["Product ID", "Product", "Department", "Price", "Stock \nQuantity"],
+        colWidths: [13, 35, 30, 10, 10]
+    });
+
+    for (var i = 0; i < results.length; i++) {
+        var infoArray = [results[i].item_id, results[i].product_name,  results[i].department_name, results[i].price, results[i].stock_quantity]; 
+        table.push(infoArray);
+    };        
+
+    console.log(table.toString());
+};
 
 function displayProducts() {
     connection.query("SELECT * FROM products", function(err, results) {
@@ -73,15 +87,62 @@ function displayProducts() {
 };
 
 function viewLowInv() {
-    connection.query("SELECT * FROM products WHERE stock_quantity < 6", function(err, results) {
+    connection.query("SELECT * FROM products WHERE stock_quantity < 6", function(err, resultsTable) {
         if(err) throw err;
 
-        makeTable(results);
+        console.log("\n          --------------------------\n");
+        console.log("                Low Inventory");
+        console.log("\n          --------------------------\n");
+
+        makeTable(resultsTable);
         promptAction();
     });
 };
 
 function addInv() {
+    connection.query("SELECT * FROM products", function(err, resultsAdd) {
+        if(err) throw err;
+
+        makeTable(resultsAdd);
+
+        inquirer.prompt([
+            {
+                name: "addID",
+                type: "input",
+                message: "What is the ID of the item you would like to add to?",
+            }
+        ]).then(function(answer) {
+            for (var i = 0; i < resultsAdd.length; i++) {
+                if(resultsAdd[i].item_id == answer.addID) {
+                    var choice = answer.addID;
+                    var id = i;
+
+                    inquirer.prompt([{
+                        name: "addQuant",
+                        type: "input",
+                        message: "How many would you like to add?",
+                        validate: function(value) {
+                            if(isNaN(value)==false) {
+                                return true;
+                            } else {
+                                return false;
+                            }
+                        }
+                    }]).then(function(answer) {
+                        var num = answer.addQuant;
+                        var addNum = (resultsAdd[id].stock_quantity + num);
+
+                        var query = "UPDATE products SET stock_quantity= ? WHERE item_id=?"
+
+                        connection.query(query, [num, choice], function(err, resultsQuant) {
+                            console.log(resultsAdd[id].product_name);
+                            console.log("You have successfully added " + num + " " + resultsAdd[id].product_name);
+                        })
+                    })
+                }
+            }
+        })
+    });
     // print the table
     //need to prompt the user for which item they would like to add inventory to
     //how much would they like to add
@@ -95,18 +156,4 @@ function addInv() {
 function quit() {
     console.log("Goodbye.");
     process.exit();
-};
-
-function makeTable(results) {
-    var table = new Table ({
-        head: ["Product ID", "Product", "Department", "Price", "Stock \nQuantity"],
-        colWidths: [13, 35, 30, 10, 10]
-    });
-
-    for (var i = 0; i < results.length; i++) {
-        var infoArray = [results[i].item_id, results[i].product_name,  results[i].department_name, results[i].price, results[i].stock_quantity]; 
-        table.push(infoArray);
-    };        
-
-    console.log(table.toString());
 };
