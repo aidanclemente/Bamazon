@@ -9,4 +9,4 @@
 
 * bamazonManager.js - Management side allowing user to:<ul><li> View All Products for Sale</li><li> Check Low Inventory</li><li> Add Inventory</li><li> Add New Products to Database</li></ul>
 
-Insert Manager gif or video here
+![bamazonmanager](https://user-images.githubusercontent.com/30439389/36176742-9ec5b0e6-10e1-11e8-9e32-f0f857111a82.gif)
