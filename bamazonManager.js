@@ -19,7 +19,6 @@ connection.connect(function(err) {
     promptAction();
 });
 
-
 function promptAction() {
     inquirer.prompt({
         name: "action",
@@ -57,7 +56,6 @@ function promptAction() {
     });
 };
 
-
 function makeTable(results) {
     var table = new Table ({
         head: ["Product ID", "Product", "Department", "Price", "Stock \nQuantity"],
@@ -71,7 +69,6 @@ function makeTable(results) {
 
     console.log(table.toString());
 };
-
 
 function keepGoing() {
     inquirer.prompt({
@@ -102,7 +99,6 @@ function notValid() {
     process.exit();
 };
 
-
 function displayProducts() {
     connection.query("SELECT * FROM products", function(err, results) {
         if(err) throw err;
@@ -116,7 +112,6 @@ function displayProducts() {
     });
 };
 
-
 function viewLowInv() {
     connection.query("SELECT * FROM products WHERE stock_quantity < 6", function(err, resultsTable) {
         if(err) throw err;
@@ -129,7 +124,6 @@ function viewLowInv() {
         keepGoing();
     });
 };
-
 
 function addInv() {
     connection.query("SELECT * FROM products", function(err, resultsAdd) {
@@ -208,7 +202,6 @@ function addInv() {
     });
 };
 
-
 function addProduct() {
     inquirer.prompt([
         {
@@ -265,8 +258,7 @@ function addProduct() {
             }
         );
     });
-}
-
+};
 
 function quit() {
     console.log("\nNow exiting Bamazon Manager. Goodbye.");
