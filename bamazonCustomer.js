@@ -50,7 +50,7 @@ function shoppingCart(results) {
     inquirer.prompt({
         name: "choiceId",
         type: "input",
-        message: "Select a product to order by entering the Item ID. [Press Q to quit]",
+        message: "Select a product to order by entering the Item ID. [Quit with Q]",
     }).then(function(answer) {
 
         // Allows the user to exit out any time
@@ -76,7 +76,7 @@ function shoppingCart(results) {
                 inquirer.prompt([{
                     name: "quantity",
                     type: "input",
-                    message: "How many would you like to buy? [Press Q to quit]",
+                    message: "How many would you like to buy? [Quit with Q]",
                     validate: function(value) {
                         if(isNaN(value)==false) {
                             return true;
@@ -130,3 +130,4 @@ function shoppingCart(results) {
         //if the number ordered is less than or equal to the number available, then
             //update the quantity available
             //create a variable to store the total
+// module.exports = displayProducts;
