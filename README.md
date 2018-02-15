@@ -1,6 +1,6 @@
 # Bamazon
 
-### Bamazon is an Amazon-lik storefront utilizing MySQL database to view products and manage inventory.
+### Bamazon is an Amazon-like storefront utilizing MySQL database to view products and manage inventory.
 
 ### Bamazon has two apps:
 * bamazonCustomer.js - Client side to view and purchase products
